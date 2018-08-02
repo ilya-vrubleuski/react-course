@@ -119,7 +119,7 @@
 class News extends React.Component {
       renderNews = () =>{
         const {data} = this.props;
-        let newsTemplate 
+        let newsTemplate =null;
         if(data.length){
               newsTemplate= data.map(function(item){
               return <Article key={item.id} data={item} />
@@ -156,10 +156,10 @@ class News extends React.Component {
       }
 
       render(){
-        const {id, author, text, bigText} = this.props.data;
+        const {author, text, bigText} = this.props.data;
         const {visible} = this.state
         return(
-              <div className='article' key={id}>
+              <div className='article'>
                 <p className='news__author'>{author}:</p>
                 <p className='news__text'>{text}</p>
                 {
@@ -174,6 +174,7 @@ class News extends React.Component {
      }
      Article.propTypes = {
        data:PropTypes.shape({
+         id: PropTypes.number.isRequired,
          author: PropTypes.string.isRequired,
          text: PropTypes.string.isRequired,
          bigText: PropTypes.string.isRequired,
@@ -184,13 +185,20 @@ class News extends React.Component {
       state ={
         name: '',
         text: '',
+        bigText: '',
         agree: false,
       }
 
       onBtnClickHandler = (e) => {
          e.preventDefault();
-         const {name, text} = this.state;
-         alert(name + '\n' + text);
+         const {name, text, bigText} = this.state;
+         //alert(name + '\n' + text);
+         this.props.onAddNews({
+           id: +new Date(), 
+           author: name,
+           text, 
+           bigText,
+         });
        }
        
        handleChange = (e) => {
@@ -212,11 +220,12 @@ class News extends React.Component {
        }
 
        render(){
-          const {name, text, agree} = this.state
+          const {name, text, bigText, agree} = this.state
          return(
            <form className='add'>
             <input id='name' type='text' className='add__author' onChange={this.handleChange} placeholder='Ваше имя' value={name}/>
             <textarea id='text' className='add__text' onChange={this.handleChange} placeholder='Текст новости' value={text}/>
+            <textarea id='bigText' className='add__text' onChange={this.handleChange} placeholder='Текст новости подробно' value={bigText}/>
             <label className='add__checkrule'>
               <input type='checkbox' onClick={this.handleCheckboxChange}/> Я согласен с правилами
             </label>
@@ -225,15 +234,31 @@ class News extends React.Component {
          )
        }
      }
+     
+     Add.propTypes = {
+       onAddNews: PropTypes.func.isRequired,
+     }
 
-     const App = () => {
+     class App  extends React.Component {
+       state = {
+         news: myNews,
+       }
+
+       handleAddNews = (data) =>{
+        console.log('я вызвана из Add, но имею доступ к this.state у App!', this.state);
+        const nextNews = [data, ...this.state.news]
+        this.setState({news:nextNews});
+       }
+
+       render(){
             return(
             <React.Fragment>
               <h3>Новости</h3>
-              <Add />
-              <News data={myNews}/>
+              <Add onAddNews={this.handleAddNews}/>
+              <News data={this.state.news}/>
             </React.Fragment>
           )
+        }
         }
 
       ReactDOM.render(
